@@ -1,26 +1,47 @@
 /**
- * Home page for the Pizza House application.
- * This is a temporary placeholder that will be replaced
- * with the real landing page in a future sprint.
+ * Home Page (Pizza House Landing Page)
+ *
+ * What it does:
+ * Assembles all landing page components into a complete responsive page layout.
+ * Page content begins with top padding (pt-16) to ensure zero overlap with the fixed header.
+ *
+ * Components assembled:
+ * 1. Navbar (Fixed top-0 left-0 right-0 header navigation with scroll shadow)
+ * 2. HeroSection (Artisan pizza hero banner & CTAs)
+ * 3. FeaturesSection (Wood-fired oven, fresh ingredients, express delivery)
+ * 4. PopularPizzaSection (Preview of popular pizza menu cards)
+ * 5. Footer (Links, contact info, social icons, and copyright)
+ *
+ * Where it belongs:
+ * src/app/page.tsx
  */
 
-import { Button } from "@/components/ui/button";
+import Navbar from "@/components/Navbar";
+import HeroSection from "@/components/HeroSection";
+import FeaturesSection from "@/components/FeaturesSection";
+import PopularPizzaSection from "@/components/PopularPizzaSection";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4">
-      {/* Hero heading */}
-      <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl">
-        🍕 Pizza House
-      </h1>
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary selection:text-primary-foreground">
+      {/* 1. Fixed Header Navigation */}
+      <Navbar />
 
-      {/* Tagline */}
-      <p className="max-w-md text-center text-lg text-muted-foreground">
-        Fresh, handmade pizza with the finest ingredients. Coming soon.
-      </p>
+      {/* 2. Main Landing Sections (pt-16 ensures content starts cleanly below 64px fixed header) */}
+      <main className="pt-16">
+        {/* Hero Section */}
+        <HeroSection />
 
-      {/* CTA button — tests that shadcn/ui and our theme work */}
-      <Button size="lg">Order Now</Button>
-    </main>
+        {/* Features / Value Proposition Highlights */}
+        <FeaturesSection />
+
+        {/* Popular Pizza Cards Grid */}
+        <PopularPizzaSection />
+      </main>
+
+      {/* 3. Footer */}
+      <Footer />
+    </div>
   );
 }

@@ -1,19 +1,14 @@
 /**
  * Root layout for the Pizza House application.
- * This file wraps every page with the global font (Poppins),
- * global styles, and the dark theme class.
+ * Wraps every page with global fonts (Poppins), global CSS, and ThemeProvider.
  */
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { ThemeProvider } from "@/providers/theme-provider";
 import "./globals.css";
 
 /**
  * Poppins font configuration.
- * Poppins is NOT a variable font, so we must specify each weight we need.
- * - 400: Regular text
- * - 500: Medium (buttons, labels)
- * - 600: Semi-bold (headings, emphasis)
- * - 700: Bold (main headings)
  */
 const poppins = Poppins({
   subsets: ["latin"],
@@ -35,8 +30,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${poppins.variable} dark h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${poppins.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem={true}
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

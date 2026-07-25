@@ -1,13 +1,10 @@
 /**
  * Global styles for the Pizza House application.
  *
- * This file defines:
- * - Tailwind CSS imports
- * - shadcn/ui theme variables (colors, radii, fonts)
- * - Our custom dark theme: Black, Deep Red, Gold, White
- *
- * We use OKLCH color format because shadcn/ui generates it by default.
- * OKLCH is a modern color space that produces more perceptually uniform colors.
+ * Defines:
+ * - Tailwind CSS v4 imports
+ * - next-themes class variants
+ * - Light and Dark theme CSS variables
  */
 
 @import "tailwindcss";
@@ -17,8 +14,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /**
- * Theme tokens — these map CSS variables to Tailwind utility classes.
- * For example, --color-primary becomes usable as `bg-primary` in Tailwind.
+ * Theme tokens — map CSS variables to Tailwind utility classes.
  */
 @theme inline {
   --color-background: var(--background);
@@ -64,53 +60,45 @@
 }
 
 /**
- * Light theme (kept as fallback, but our app defaults to dark).
+ * Light theme — Clean, warm modern restaurant theme.
  */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.98 0.005 80);
+  --foreground: oklch(0.18 0.01 40);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.18 0.01 40);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.45 0.18 18);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.8 0.12 85);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.18 0.01 40);
+  --primary: oklch(0.55 0.22 25);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.01 80);
+  --secondary-foreground: oklch(0.2 0.01 40);
+  --muted: oklch(0.95 0.01 80);
+  --muted-foreground: oklch(0.48 0.01 40);
+  --accent: oklch(0.72 0.16 75);
+  --accent-foreground: oklch(0.18 0.01 40);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.45 0.18 18);
-  --chart-1: oklch(0.45 0.18 18);
-  --chart-2: oklch(0.8 0.12 85);
+  --border: oklch(0.88 0.01 80);
+  --input: oklch(0.88 0.01 80);
+  --ring: oklch(0.55 0.22 25);
+  --chart-1: oklch(0.55 0.22 25);
+  --chart-2: oklch(0.72 0.16 75);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.45 0.18 18);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.45 0.18 18);
+  --sidebar: oklch(0.98 0.005 80);
+  --sidebar-foreground: oklch(0.18 0.01 40);
+  --sidebar-primary: oklch(0.55 0.22 25);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.94 0.01 80);
+  --sidebar-accent-foreground: oklch(0.2 0.01 40);
+  --sidebar-border: oklch(0.88 0.01 80);
+  --sidebar-ring: oklch(0.55 0.22 25);
 }
 
 /**
- * Dark theme — Our primary theme.
- *
- * Color palette:
- * - Background:  Deep black (#0a0a0a)
- * - Primary:     Deep red (crimson) — for buttons, links, key actions
- * - Accent:      Gold — for highlights, badges, special elements
- * - Foreground:  White/light gray — for text
- * - Card:        Slightly lighter black — for cards and surfaces
- * - Muted:       Dark gray — for secondary backgrounds
+ * Dark theme — Sleek dark luxury restaurant theme.
  */
 .dark {
   --background: oklch(0.145 0 0);
@@ -151,7 +139,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-200;
   }
   html {
     @apply font-sans;

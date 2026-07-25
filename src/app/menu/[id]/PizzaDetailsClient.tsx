@@ -3,7 +3,8 @@
  *
  * What it does:
  * Handles client-side options selection (size, toppings, quantity),
- * live price calculations, and adding items to the Zustand cart store.
+ * live price calculations, adding items to the Zustand cart store,
+ * customer reviews section, and related pizzas recommendations.
  *
  * Where it belongs:
  * src/app/menu/[id]/PizzaDetailsClient.tsx
@@ -14,13 +15,17 @@
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, CheckCircle2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShoppingBag, CheckCircle2, ShieldCheck, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import QuantitySelector from "@/components/QuantitySelector";
 import PizzaOptions, { PizzaSize, AVAILABLE_TOPPINGS, SIZE_OPTIONS } from "@/components/PizzaOptions";
-import { PizzaProduct } from "@/constants/landing-data";
+import ReviewsSection from "@/components/ReviewsSection";
+import PizzaCard from "@/components/PizzaCard";
+import FavoriteButton from "@/components/FavoriteButton";
+import { FULL_MENU_PIZZAS, PizzaProduct } from "@/constants/landing-data";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart-store";
+import { toast } from "sonner";
 
 export interface PizzaDetailsClientProps {
   pizza: PizzaProduct;
@@ -34,6 +39,15 @@ export default function PizzaDetailsClient({ pizza }: PizzaDetailsClientProps) {
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [quantity, setQuantity] = useState<number>(1);
   const [showAddedFeedback, setShowAddedFeedback] = useState(false);
+
+  /** Related pizzas from same category or fallback */
+  const relatedPizzas = useMemo(() => {
+    const sameCat = FULL_MENU_PIZZAS.filter(
+      (p) => p.category === pizza.category && p.id !== pizza.id
+    );
+    if (sameCat.length > 0) return sameCat.slice(0, 3);
+    return FULL_MENU_PIZZAS.filter((p) => p.id !== pizza.id).slice(0, 3);
+  }, [pizza.category, pizza.id]);
 
   /** Toggle topping selection */
   const handleToppingToggle = (toppingName: string) => {
@@ -76,6 +90,10 @@ export default function PizzaDetailsClient({ pizza }: PizzaDetailsClientProps) {
       quantity,
     });
 
+    toast.success(`${pizza.name} (${selectedSize}) added to cart!`, {
+      description: `${quantity} × ${formatPrice(unitPrice)}`,
+    });
+
     // Show temporary feedback toast/badge
     setShowAddedFeedback(true);
     setTimeout(() => setShowAddedFeedback(false), 2500);
@@ -84,13 +102,15 @@ export default function PizzaDetailsClient({ pizza }: PizzaDetailsClientProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Back Button */}
-      <div className="mb-8">
+      <div className="mb-8 flex justify-between items-center">
         <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
           <Link href="/menu" className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Full Menu
           </Link>
         </Button>
+
+        <FavoriteButton pizzaId={pizza.id} pizzaName={pizza.name} size="md" />
       </div>
 
       {/* Main Details Grid */}
@@ -189,6 +209,28 @@ export default function PizzaDetailsClient({ pizza }: PizzaDetailsClientProps) {
         </div>
 
       </div>
+
+      {/* Customer Reviews Section */}
+      <div className="mt-16">
+        <ReviewsSection />
+      </div>
+
+      {/* Related Pizzas Section */}
+      {relatedPizzas.length > 0 && (
+        <div className="mt-20 pt-10 border-t border-border/50">
+          <div className="flex items-center gap-2 mb-6">
+            <Flame className="h-5 w-5 text-primary" />
+            <h3 className="text-xl font-bold text-foreground">You Might Also Like</h3>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {relatedPizzas.map((relPizza) => (
+              <PizzaCard key={relPizza.id} pizza={relPizza} />
+            ))}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -1,9 +1,12 @@
 /**
  * Root layout for the Pizza House application.
- * Wraps every page with global fonts (Poppins), global CSS, and ThemeProvider.
+ * Wraps every page with global fonts (Poppins), global CSS, ThemeProvider,
+ * SEO metadata, and Sonner Toast notifications.
  */
+
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { Toaster } from "sonner";
 import { ThemeProvider } from "@/providers/theme-provider";
 import "./globals.css";
 
@@ -19,9 +22,47 @@ const poppins = Poppins({
 
 /** SEO metadata for the application */
 export const metadata: Metadata = {
-  title: "Pizza House — Fresh, Handmade Pizza",
+  title: {
+    default: "Pizza House — Wood-Fired Artisan Pizza",
+    template: "%s | Pizza House",
+  },
   description:
-    "Order the best handmade pizzas with fresh ingredients. Fast delivery, amazing taste.",
+    "Order handcrafted artisan wood-fired pizzas baked in 900°F brick ovens with fresh organic ingredients. Fast 30-minute hot delivery across Egypt.",
+  keywords: [
+    "Pizza",
+    "Pizza House",
+    "Wood-fired Pizza",
+    "Artisan Pizza",
+    "Pizza Delivery",
+    "Egypt Pizza",
+    "Fresh Ingredients",
+  ],
+  authors: [{ name: "Pizza House Team" }],
+  creator: "Pizza House",
+  metadataBase: new URL("https://pizzahouse.eg"),
+  openGraph: {
+    type: "website",
+    locale: "en_EG",
+    url: "https://pizzahouse.eg",
+    title: "Pizza House — Wood-Fired Artisan Pizza",
+    description:
+      "Order handcrafted artisan wood-fired pizzas baked in 900°F brick ovens with fresh organic ingredients.",
+    siteName: "Pizza House",
+    images: [
+      {
+        url: "/images/hero-pizza.png",
+        width: 1200,
+        height: 630,
+        alt: "Pizza House Artisan Wood-Fired Pizza",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pizza House — Wood-Fired Artisan Pizza",
+    description: "Order handcrafted artisan wood-fired pizzas with fast 30-minute delivery.",
+    images: ["/images/hero-pizza.png"],
+  },
 };
 
 export default function RootLayout({
@@ -43,6 +84,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <Toaster position="top-right" richColors theme="system" />
         </ThemeProvider>
       </body>
     </html>

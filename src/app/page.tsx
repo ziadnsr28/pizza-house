@@ -8,9 +8,10 @@
  * Components assembled:
  * 1. Navbar (Fixed top-0 left-0 right-0 header navigation with scroll shadow)
  * 2. HeroSection (Artisan pizza hero banner & CTAs)
- * 3. FeaturesSection (Wood-fired oven, fresh ingredients, express delivery)
- * 4. PopularPizzaSection (Preview of popular pizza menu cards)
- * 5. Footer (Links, contact info, social icons, and copyright)
+ * 3. FeaturesSection (6 feature highlights in a responsive grid)
+ * 4. AboutSection (Restaurant story, quality message, experience badge)
+ * 5. PopularPizzaSection (Preview of popular pizza menu cards)
+ * 6. Footer (Links, contact info, social icons, and copyright)
  *
  * Where it belongs:
  * src/app/page.tsx
@@ -19,6 +20,7 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
+import AboutSection from "@/components/AboutSection";
 import PopularPizzaSection from "@/components/PopularPizzaSection";
 import Footer from "@/components/Footer";
 
@@ -35,6 +37,9 @@ export default function Home() {
 
         {/* Features / Value Proposition Highlights */}
         <FeaturesSection />
+
+        {/* About Us / Restaurant Story */}
+        <AboutSection />
 
         {/* Popular Pizza Cards Grid */}
         <PopularPizzaSection />

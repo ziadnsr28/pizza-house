@@ -3,10 +3,7 @@
  *
  * What it does:
  * Renders the full Pizza House menu with real-time search filtering,
- * category tab filtering, and an animated responsive pizza card grid.
- *
- * Why it exists:
- * Provides customers with a browsable, filterable menu experience.
+ * category tab filtering, sorting controls, and an animated responsive pizza card grid.
  *
  * Where it belongs:
  * src/app/menu/page.tsx (accessible at /menu)
@@ -20,6 +17,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import CategoryFilter from "@/components/CategoryFilter";
+import MenuSort, { SortOption } from "@/components/MenuSort";
 import MenuGrid from "@/components/MenuGrid";
 import { FULL_MENU_PIZZAS, MenuCategory } from "@/constants/landing-data";
 
@@ -30,17 +28,14 @@ export default function MenuPage() {
   /** State for currently selected category filter tab */
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory>("All");
 
+  /** State for sorting option */
+  const [sortOption, setSortOption] = useState<SortOption>("default");
+
   /**
-   * Filtered pizza list.
-   * useMemo recalculates only when searchQuery or selectedCategory changes.
-   *
-   * Filtering logic:
-   * 1. If category is not "All", keep only pizzas matching the selected category.
-   * 2. If search query is not empty, keep only pizzas whose name or description
-   *    includes the search text (case-insensitive).
+   * Filtered & Sorted pizza list.
    */
   const filteredPizzas = useMemo(() => {
-    return FULL_MENU_PIZZAS.filter((pizza) => {
+    const list = FULL_MENU_PIZZAS.filter((pizza) => {
       const matchesCategory =
         selectedCategory === "All" || pizza.category === selectedCategory;
 
@@ -51,12 +46,25 @@ export default function MenuPage() {
 
       return matchesCategory && matchesSearch;
     });
-  }, [searchQuery, selectedCategory]);
 
-  /** Resets both search query and category filter to defaults */
+    if (sortOption === "price-low") {
+      return [...list].sort((a, b) => a.price - b.price);
+    }
+    if (sortOption === "price-high") {
+      return [...list].sort((a, b) => b.price - a.price);
+    }
+    if (sortOption === "popular") {
+      return [...list].sort((a, b) => (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0));
+    }
+
+    return list;
+  }, [searchQuery, selectedCategory, sortOption]);
+
+  /** Resets search query, category filter, and sort option */
   const handleReset = () => {
     setSearchQuery("");
     setSelectedCategory("All");
+    setSortOption("default");
   };
 
   return (
@@ -97,13 +105,17 @@ export default function MenuPage() {
               />
             </div>
 
-            {/* Results Count */}
-            <div className="mt-8 mb-2 text-center text-sm text-muted-foreground">
-              Showing{" "}
-              <span className="font-semibold text-foreground">
-                {filteredPizzas.length}
-              </span>{" "}
-              {filteredPizzas.length === 1 ? "pizza" : "pizzas"}
+            {/* Results Count & Sorting Controls */}
+            <div className="mt-8 mb-2 flex items-center justify-between flex-wrap gap-4 pt-4 border-t border-border/40 text-sm text-muted-foreground">
+              <div>
+                Showing{" "}
+                <span className="font-semibold text-foreground">
+                  {filteredPizzas.length}
+                </span>{" "}
+                {filteredPizzas.length === 1 ? "pizza" : "pizzas"}
+              </div>
+
+              <MenuSort currentSort={sortOption} onSortChange={setSortOption} />
             </div>
 
             {/* Pizza Grid */}

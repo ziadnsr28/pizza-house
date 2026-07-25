@@ -8,12 +8,9 @@
  * - Pathname detection (`usePathname`) for active route highlighting (/ vs /menu)
  * - Active section tracking with animated underline transitions
  * - Smooth hover underline animation
+ * - Favorites & Cart counter badges connected to Zustand
  * - ThemeToggle button (Light / Dark mode toggle)
- * - Live Cart Icon button with item counter badge connected to Zustand
  * - CartDrawer toggle & mobile drawer menu
- *
- * Why it exists:
- * Provides persistent global navigation, theme switching, and cart access across all devices.
  *
  * Where it belongs:
  * src/components/Navbar.tsx
@@ -24,12 +21,13 @@
 import { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Pizza, Menu, X, ShoppingBag } from "lucide-react";
+import { Pizza, Menu, X, ShoppingBag, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CartDrawer from "@/components/CartDrawer";
 import ThemeToggle from "@/components/ThemeToggle";
 import { NAV_ITEMS } from "@/constants/landing-data";
 import { useCartStore } from "@/stores/cart-store";
+import { useFavoriteStore } from "@/stores/favorite-store";
 import { cn } from "@/lib/utils";
 
 /** Helper to subscribe to client mount state safely without React 19 useEffect warnings */
@@ -48,18 +46,18 @@ export default function Navbar() {
   /** State tracking if mobile drawer menu is open */
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  /** State tracking current active section anchor on home page */
-  const [activeSection, setActiveSection] = useState("#hero");
-
   /** State tracking if page is scrolled down to toggle shadow */
   const [isScrolled, setIsScrolled] = useState(false);
 
   /** Safe client hydration check */
   const isClient = useIsClient();
 
-  /** Zustand cart store getters & actions */
+  /** Zustand cart & favorite store getters */
   const { getTotalItems, setCartOpen } = useCartStore();
-  const totalItems = isClient ? getTotalItems() : 0;
+  const totalCartItems = isClient ? getTotalItems() : 0;
+
+  const getTotalFavorites = useFavoriteStore((state) => state.getTotalFavorites);
+  const totalFavorites = isClient ? getTotalFavorites() : 0;
 
   /** Toggle mobile drawer menu */
   const toggleMobileMenu = () => {
@@ -71,58 +69,20 @@ export default function Navbar() {
     setIsMobileMenuOpen(false);
   };
 
-  /** Handle link click */
-  const handleNavClick = (href: string) => {
-    if (href.startsWith("#") || href.includes("#")) {
-      const hash = href.includes("#") ? `#${href.split("#")[1]}` : href;
-      setActiveSection(hash);
-    }
+  /** Handle link click — close mobile drawer */
+  const handleNavClick = () => {
     closeMobileMenu();
   };
 
-  /** Scroll listener for shadow and section observer on home page */
+  /** Scroll listener for shadow */
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
 
     window.addEventListener("scroll", handleScroll);
-
-    if (pathname === "/") {
-      const sectionIds = ["hero", "features", "about", "menu"];
-      const observerCallback: IntersectionObserverCallback = (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(`#${entry.target.id}`);
-          }
-        });
-      };
-
-      const observerOptions = {
-        root: null,
-        rootMargin: "-20% 0px -60% 0px",
-        threshold: 0.1,
-      };
-
-      const observer = new IntersectionObserver(observerCallback, observerOptions);
-
-      sectionIds.forEach((id) => {
-        const element = document.getElementById(id);
-        if (element) {
-          observer.observe(element);
-        }
-      });
-
-      return () => {
-        window.removeEventListener("scroll", handleScroll);
-        observer.disconnect();
-      };
-    }
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [pathname]);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
@@ -152,22 +112,25 @@ export default function Navbar() {
           {/* Desktop Navigation Links */}
           <nav className="hidden items-center gap-8 md:flex">
             {NAV_ITEMS.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (pathname === "/" && item.href.startsWith("/#") && activeSection === item.href.replace("/", "")) ||
-                (pathname === "/" && item.href === "/" && activeSection === "#hero");
+              const isActive = pathname === item.href;
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => handleNavClick(item.href)}
+                  onClick={handleNavClick}
                   className={cn(
-                    "group relative py-1 text-sm font-medium transition-colors duration-200",
+                    "group relative flex items-center gap-1.5 py-1 text-sm font-medium transition-colors duration-200",
                     isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+
+                  {item.href === "/favorites" && totalFavorites > 0 && (
+                    <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                      {totalFavorites}
+                    </span>
+                  )}
 
                   {/* Animated Underline */}
                   <span
@@ -186,18 +149,32 @@ export default function Navbar() {
             {/* Theme Toggle Button */}
             <ThemeToggle />
 
+            {/* Favorites Icon Button */}
+            <Link
+              href="/favorites"
+              aria-label={`Favorites (${totalFavorites} items)`}
+              className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card/60 text-foreground backdrop-blur-sm transition-all hover:border-red-500/50 hover:bg-muted/60"
+            >
+              <Heart className="h-4 w-4 text-red-500 fill-red-500/30" />
+              {totalFavorites > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                  {totalFavorites}
+                </span>
+              )}
+            </Link>
+
             {/* Live Cart Button with Item Counter Badge */}
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              aria-label={`Open Cart (${totalItems} items)`}
+              aria-label={`Open Cart (${totalCartItems} items)`}
               className="relative flex h-10 items-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3.5 text-sm font-semibold text-foreground backdrop-blur-sm transition-all hover:border-primary/50 hover:bg-muted/60"
             >
               <ShoppingBag className="h-4 w-4 text-primary" />
               <span>Cart</span>
-              {totalItems > 0 && (
+              {totalCartItems > 0 && (
                 <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-extrabold text-primary-foreground animate-in zoom-in-50 duration-200">
-                  {totalItems}
+                  {totalCartItems}
                 </span>
               )}
             </button>
@@ -214,17 +191,31 @@ export default function Navbar() {
             {/* Mobile Theme Toggle */}
             <ThemeToggle />
 
+            {/* Mobile Favorites Button */}
+            <Link
+              href="/favorites"
+              aria-label={`Favorites (${totalFavorites} items)`}
+              className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-border/60 bg-card/60 text-foreground backdrop-blur-sm"
+            >
+              <Heart className="h-5 w-5 text-red-500 fill-red-500/30" />
+              {totalFavorites > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                  {totalFavorites}
+                </span>
+              )}
+            </Link>
+
             {/* Mobile Cart Button */}
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              aria-label={`Open Cart (${totalItems} items)`}
+              aria-label={`Open Cart (${totalCartItems} items)`}
               className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-border/60 bg-card/60 text-foreground backdrop-blur-sm"
             >
               <ShoppingBag className="h-5 w-5 text-primary" />
-              {totalItems > 0 && (
+              {totalCartItems > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-extrabold text-primary-foreground">
-                  {totalItems}
+                  {totalCartItems}
                 </span>
               )}
             </button>
@@ -265,9 +256,13 @@ export default function Navbar() {
                     )}
                   >
                     <span>{item.label}</span>
-                    {isActive && (
+                    {item.href === "/favorites" && totalFavorites > 0 ? (
+                      <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                        {totalFavorites}
+                      </span>
+                    ) : isActive ? (
                       <span className="h-2 w-2 rounded-full bg-primary" />
-                    )}
+                    ) : null}
                   </Link>
                 );
               })}

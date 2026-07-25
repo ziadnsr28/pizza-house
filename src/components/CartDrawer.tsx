@@ -201,10 +201,13 @@ export default function CartDrawer() {
               {/* Checkout CTA */}
               <Button
                 size="lg"
+                onClick={() => setCartOpen(false)}
                 className="w-full gap-2 text-base font-bold shadow-xl shadow-primary/25 rounded-2xl h-12"
               >
-                Checkout — {formatPrice(totalPrice)}
-                <ArrowRight className="h-5 w-5" />
+                <Link href="/checkout" className="flex items-center justify-center gap-2 w-full">
+                  Checkout — {formatPrice(totalPrice)}
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
               </Button>
             </div>
           )}

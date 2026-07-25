@@ -3,7 +3,7 @@
  *
  * What it does:
  * Displays an individual pizza item card wrapped in a Next.js Link targeting /menu/[id].
- * Includes image, title, description, formatted EGP price tag, optional badge, and "Order Now" CTA.
+ * Includes image, title, description, formatted EGP price tag, optional badge, FavoriteButton, and "Order Now" CTA.
  *
  * Why it exists:
  * Serves as a reusable UI component for previewing and navigating to pizza details.
@@ -16,6 +16,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import FavoriteButton from "@/components/FavoriteButton";
 import { PizzaProduct } from "@/constants/landing-data";
 import { formatPrice } from "@/lib/utils";
 
@@ -43,6 +44,11 @@ export default function PizzaCard({ pizza }: PizzaCardProps) {
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
+
+          {/* Favorite Toggle Button */}
+          <div className="absolute top-3 left-3 z-10">
+            <FavoriteButton pizzaId={id} pizzaName={name} size="sm" />
+          </div>
 
           {/* Optional Badge Tag */}
           {badge && (
@@ -75,7 +81,7 @@ export default function PizzaCard({ pizza }: PizzaCardProps) {
               </span>
             </div>
 
-            {/* Order Now CTA button (Outer card is a Link, so no inner <a> tag is nested) */}
+            {/* Order Now CTA button */}
             <Button
               size="sm"
               tabIndex={-1}

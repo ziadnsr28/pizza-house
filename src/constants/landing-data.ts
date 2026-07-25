@@ -24,7 +24,7 @@ export interface NavItem {
 /** TypeScript interface for Feature Cards */
 export interface FeatureItem {
   id: string;
-  iconName: "Flame" | "Clock" | "Leaf";
+  iconName: "Flame" | "Clock" | "Leaf" | "ChefHat" | "Award" | "Utensils";
   title: string;
   description: string;
 }
@@ -59,8 +59,10 @@ export interface SocialLink {
 export const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/" },
   { label: "Full Menu", href: "/menu" },
-  { label: "Features", href: "/#features" },
-  { label: "About Us", href: "/#about" },
+  { label: "Favorites", href: "/favorites" },
+  { label: "My Orders", href: "/orders" },
+  { label: "Features", href: "/features" },
+  { label: "About Us", href: "/about" },
 ];
 
 /** Menu Category Filter Tabs */
@@ -72,7 +74,7 @@ export const MENU_CATEGORIES: MenuCategory[] = [
   "Special",
 ];
 
-/** Highlights / Features section data */
+/** Highlights / Features section data (6 Restaurant Features) */
 export const FEATURES_DATA: FeatureItem[] = [
   {
     id: "feature-1",
@@ -91,6 +93,24 @@ export const FEATURES_DATA: FeatureItem[] = [
     iconName: "Clock",
     title: "30-Minute Delivery",
     description: "Piping hot delivery guaranteed within 30 minutes, right to your doorstep.",
+  },
+  {
+    id: "feature-4",
+    iconName: "ChefHat",
+    title: "Master Italian Chefs",
+    description: "Handcrafted by experienced pizzaiolos trained in Naples traditional techniques.",
+  },
+  {
+    id: "feature-5",
+    iconName: "Award",
+    title: "Premium Quality",
+    description: "Award-winning 48-hour fermented dough crafted with zero artificial additives.",
+  },
+  {
+    id: "feature-6",
+    iconName: "Utensils",
+    title: "Custom Toppings",
+    description: "Personalize your pizza with a wide selection of artisan extra toppings and crusts.",
   },
 ];
 
@@ -114,6 +134,41 @@ export const POPULAR_PIZZAS: PizzaProduct[] = [
     image: "/images/pizza-margherita.png",
     category: "Classic",
     badge: "Traditional",
+    isPopular: true,
+  },
+  {
+    id: "pizza-6",
+    name: "Chicken Ranch Pizza",
+    description: "Grilled marinated chicken breast, smoky ranch sauce, mozzarella, and crispy bacon.",
+    price: 265,
+    image: "/images/hero-pizza.png",
+    category: "Special",
+    badge: "Customer Favorite",
+    isPopular: true,
+  },
+];
+
+/** Full Menu Pizza Dataset (9 Egyptian Market Varieties) */
+export const FULL_MENU_PIZZAS: PizzaProduct[] = [
+  {
+    id: "pizza-1",
+    name: "Pepperoni Supreme",
+    description: "Crispy artisan pepperoni, melted mozzarella, and signature tomato sauce.",
+    price: 225,
+    image: "/images/pizza-pepperoni.png",
+    category: "Classic",
+    badge: "Bestseller",
+    isPopular: true,
+  },
+  {
+    id: "pizza-2",
+    name: "Classic Margherita",
+    description: "San Marzano tomatoes, fresh mozzarella, extra virgin olive oil, and fresh basil.",
+    price: 175,
+    image: "/images/pizza-margherita.png",
+    category: "Classic",
+    badge: "Traditional",
+    isPopular: true,
   },
   {
     id: "pizza-3",
@@ -124,11 +179,6 @@ export const POPULAR_PIZZAS: PizzaProduct[] = [
     category: "Special",
     badge: "Chef Special",
   },
-];
-
-/** Full Menu Pizza Dataset */
-export const FULL_MENU_PIZZAS: PizzaProduct[] = [
-  ...POPULAR_PIZZAS,
   {
     id: "pizza-4",
     name: "Garden Veggie Delight",
@@ -149,12 +199,40 @@ export const FULL_MENU_PIZZAS: PizzaProduct[] = [
   },
   {
     id: "pizza-6",
-    name: "Four Cheese Gourmet",
-    description: "Blend of aged parmesan, creamy gorgonzola, fresh mozzarella, and ricotta with truffle oil.",
-    price: 250,
+    name: "Chicken Ranch Pizza",
+    description: "Grilled marinated chicken breast, creamy garlic ranch sauce, mozzarella, and sweet corn.",
+    price: 265,
     image: "/images/hero-pizza.png",
     category: "Special",
-    badge: "Gourmet",
+    badge: "Top Rated",
+    isPopular: true,
+  },
+  {
+    id: "pizza-7",
+    name: "Mixed Meat Pizza (لحوم مشكل)",
+    description: "Premium blend of minced beef, pepperoni, oriental sausage, turkey bacon, and melted cheddar.",
+    price: 280,
+    image: "/images/pizza-pepperoni.png",
+    category: "Special",
+    badge: "Meat Lovers",
+  },
+  {
+    id: "pizza-8",
+    name: "Egyptian Oriental Sausage (سجق)",
+    description: "Authentic Egyptian oriental sausage, bell peppers, tomatoes, jalapenos, and melted mozzarella.",
+    price: 250,
+    image: "/images/pizza-spicy.png",
+    category: "Spicy",
+    badge: "Egyptian Local 🇪🇬",
+  },
+  {
+    id: "pizza-9",
+    name: "Seafood Supreme (سي فود)",
+    description: "Fresh red sea shrimp, calamari rings, garlic butter sauce, mozzarella, and fresh parsley.",
+    price: 310,
+    image: "/images/pizza-truffle.png",
+    category: "Special",
+    badge: "Seafood Gourmet",
   },
 ];
 
@@ -163,16 +241,16 @@ export const FOOTER_LINK_GROUPS: FooterLinkGroup[] = [
   {
     title: "Quick Links",
     links: [
-      { label: "Our Story", href: "/#about" },
+      { label: "Our Story", href: "/about" },
       { label: "Full Menu", href: "/menu" },
-      { label: "Special Offers", href: "#" },
-      { label: "Location & Hours", href: "#" },
+      { label: "Features", href: "/features" },
+      { label: "Favorites", href: "/favorites" },
     ],
   },
   {
     title: "Customer Support",
     links: [
-      { label: "Track Your Order", href: "#" },
+      { label: "Track Your Order", href: "/orders" },
       { label: "Delivery Policy", href: "#" },
       { label: "FAQ & Contact", href: "#" },
       { label: "Terms of Service", href: "#" },

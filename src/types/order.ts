@@ -13,7 +13,9 @@ export type OrderStatusType = "Pending" | "Preparing" | "Out for Delivery" | "De
 
 export interface CustomerInfo {
   fullName: string;
+  email?: string;
   phone: string;
+  city?: string;
   address: string;
   notes?: string;
 }

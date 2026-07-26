@@ -2,12 +2,8 @@
  * MenuGrid Component
  *
  * What it does:
- * Renders a responsive grid of PizzaCard components with staggered
- * Framer Motion entrance animations. Shows EmptyState when no items match.
- *
- * Why it exists:
- * Separates grid layout and animation logic from the Menu page,
- * keeping both files small and focused.
+ * Renders a responsive grid of PizzaCard components (1 card per row on mobile,
+ * 2 on tablet, 3 on desktop) with staggered Framer Motion entrance animations.
  *
  * Where it belongs:
  * src/components/MenuGrid.tsx
@@ -29,8 +25,6 @@ export interface MenuGridProps {
 
 /**
  * Framer Motion animation variants.
- * - container: Staggers children entrance with 0.08s delay between each card.
- * - item: Each card fades in and slides up 20px over 0.35s.
  */
 const containerVariants = {
   hidden: {},
@@ -63,10 +57,10 @@ export default function MenuGrid({ pizzas, searchQuery, onReset }: MenuGridProps
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
       >
         {pizzas.map((pizza) => (
-          <motion.div key={pizza.id} variants={itemVariants}>
+          <motion.div key={pizza.id} variants={itemVariants} className="w-full flex justify-center">
             <PizzaCard pizza={pizza} />
           </motion.div>
         ))}

@@ -24,6 +24,7 @@ import OrderSummary from "@/components/OrderSummary";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/stores/cart-store";
 import { useOrderStore } from "@/stores/order-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { Order } from "@/types/order";
 import { formatPrice } from "@/lib/utils";
 
@@ -43,30 +44,64 @@ export default function CheckoutPage() {
   const addOrder = useOrderStore((state) => state.addOrder);
 
   const [selectedPayment, setSelectedPayment] = useState<PaymentType>("cod");
+
+  /** Map internal payment ID to display label */
+  const paymentLabels: Record<PaymentType, string> = {
+    cod: "Cash on Delivery",
+    card: "Credit / Debit Card",
+    vodafone: "Vodafone Cash",
+  };
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /** Redirect to /menu if cart is empty after client mount */
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  /** Redirect to /login if not authenticated, or to /menu if cart is empty after client mount */
   useEffect(() => {
-    if (isClient && items.length === 0) {
-      router.push("/menu");
+    if (isClient) {
+      if (!isAuthenticated) {
+        router.push("/login?returnUrl=/checkout");
+      } else if (items.length === 0) {
+        router.push("/menu");
+      }
     }
-  }, [isClient, items, router]);
+  }, [isClient, isAuthenticated, items, router]);
 
   /** Form submit handler */
-  const handleOrderSubmit = (data: CheckoutFormData) => {
+  const handleOrderSubmit = async (data: CheckoutFormData) => {
     setIsSubmitting(true);
 
     const newOrder: Order = {
       id: `PH-${Math.floor(100000 + Math.random() * 900000)}`,
-      customer: data,
+      customer: {
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        city: data.city,
+        address: data.address,
+        notes: data.notes,
+      },
       items: [...items],
-      paymentMethod: selectedPayment === "cod" ? "Cash On Delivery" : "Credit / Debit Card",
+      paymentMethod: paymentLabels[selectedPayment],
       subtotal: getSubtotal(),
       deliveryFee: getDeliveryFee(),
       totalAmount: getTotalPrice(),
       status: "Pending",
       createdAt: new Date().toISOString(),
     };
+
+    try {
+      // Send API request to backend
+      await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: newOrder.items,
+          totalAmount: newOrder.totalAmount,
+        }),
+      });
+    } catch {
+      // Gracefully continue with client state if API fails
+    }
 
     // Save to Zustand order store and sessionStorage fallback
     addOrder(newOrder);
@@ -76,7 +111,7 @@ export default function CheckoutPage() {
     setTimeout(() => {
       clearCart();
       router.push("/order-success");
-    }, 600);
+    }, 400);
   };
 
   if (!isClient || items.length === 0) {

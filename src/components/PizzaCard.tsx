@@ -4,9 +4,7 @@
  * What it does:
  * Displays an individual pizza item card wrapped in a Next.js Link targeting /menu/[id].
  * Includes image, title, description, formatted EGP price tag, optional badge, FavoriteButton, and "Order Now" CTA.
- *
- * Why it exists:
- * Serves as a reusable UI component for previewing and navigating to pizza details.
+ * Occupies 100% full width of its parent grid column on all screen sizes.
  *
  * Where it belongs:
  * src/components/PizzaCard.tsx
@@ -31,9 +29,9 @@ export default function PizzaCard({ pizza }: PizzaCardProps) {
   return (
     <Link
       href={`/menu/${id}`}
-      className="block group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
+      className="block group w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
     >
-      <article className="relative flex flex-col h-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10">
+      <article className="relative flex flex-col w-full h-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10">
         
         {/* Pizza Image Container */}
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/30">
@@ -59,7 +57,7 @@ export default function PizzaCard({ pizza }: PizzaCardProps) {
         </div>
 
         {/* Card Body */}
-        <div className="flex flex-1 flex-col justify-between p-5 sm:p-6">
+        <div className="flex flex-1 flex-col justify-between p-5 sm:p-6 w-full">
           <div>
             {/* Pizza Title */}
             <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
@@ -73,7 +71,7 @@ export default function PizzaCard({ pizza }: PizzaCardProps) {
           </div>
 
           {/* Card Footer: Price & Order Action */}
-          <div className="mt-6 flex items-center justify-between gap-4 pt-4 border-t border-border/40">
+          <div className="mt-6 flex items-center justify-between gap-4 pt-4 border-t border-border/40 w-full">
             <div className="flex flex-col">
               <span className="text-xs font-medium text-muted-foreground">Price</span>
               <span className="text-lg sm:text-xl font-bold text-accent">

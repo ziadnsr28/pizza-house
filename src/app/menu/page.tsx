@@ -11,7 +11,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { UtensilsCrossed } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -31,11 +31,28 @@ export default function MenuPage() {
   /** State for sorting option */
   const [sortOption, setSortOption] = useState<SortOption>("default");
 
+  /** State for pizzas list (fetched from /api/pizzas or fallback) */
+  const [pizzas, setPizzas] = useState(FULL_MENU_PIZZAS);
+
+  /** Fetch pizzas from API endpoint on mount */
+  useEffect(() => {
+    fetch("/api/pizzas")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.pizzas) && data.pizzas.length > 0) {
+          setPizzas(data.pizzas);
+        }
+      })
+      .catch(() => {
+        // Silently fallback to static dataset
+      });
+  }, []);
+
   /**
    * Filtered & Sorted pizza list.
    */
   const filteredPizzas = useMemo(() => {
-    const list = FULL_MENU_PIZZAS.filter((pizza) => {
+    const list = pizzas.filter((pizza) => {
       const matchesCategory =
         selectedCategory === "All" || pizza.category === selectedCategory;
 
@@ -58,7 +75,7 @@ export default function MenuPage() {
     }
 
     return list;
-  }, [searchQuery, selectedCategory, sortOption]);
+  }, [pizzas, searchQuery, selectedCategory, sortOption]);
 
   /** Resets search query, category filter, and sort option */
   const handleReset = () => {
@@ -94,7 +111,7 @@ export default function MenuPage() {
             </div>
 
             {/* Search & Filter Controls */}
-            <div className="mt-10 flex flex-col items-center gap-6">
+            <div className="mt-10 flex flex-col items-center gap-6 w-full max-w-full">
               <SearchBar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}

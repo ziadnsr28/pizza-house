@@ -39,6 +39,7 @@ export interface PizzaProduct {
   category: MenuCategory;
   badge?: string;
   isPopular?: boolean;
+  ingredients?: string[];
 }
 
 /** TypeScript interface for Footer Link Columns */

@@ -198,13 +198,18 @@ export default function CartDrawer() {
                 </div>
               </div>
 
-              {/* Checkout CTA */}
+              {/* Checkout CTA — disabled if cart is somehow rendered empty */}
               <Button
                 size="lg"
                 onClick={() => setCartOpen(false)}
-                className="w-full gap-2 text-base font-bold shadow-xl shadow-primary/25 rounded-2xl h-12"
+                disabled={items.length === 0}
+                className="w-full gap-2 text-base font-bold shadow-xl shadow-primary/25 rounded-2xl h-12 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Link href="/checkout" className="flex items-center justify-center gap-2 w-full">
+                <Link
+                  href={items.length > 0 ? "/checkout" : "#"}
+                  onClick={items.length === 0 ? (e) => e.preventDefault() : undefined}
+                  className="flex items-center justify-center gap-2 w-full"
+                >
                   Checkout — {formatPrice(totalPrice)}
                   <ArrowRight className="h-5 w-5" />
                 </Link>

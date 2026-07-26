@@ -2,10 +2,8 @@
  * SearchBar Component
  *
  * What it does:
- * Renders a responsive search input bar with a search icon and a quick-clear (X) button.
- *
- * Why it exists:
- * Allows users to quickly filter pizzas by keyword/name in real-time.
+ * Renders a responsive search input bar filling full width on mobile (320px-768px)
+ * and constrained to max-w-xl on desktop.
  *
  * Where it belongs:
  * src/components/SearchBar.tsx
@@ -26,7 +24,7 @@ export default function SearchBar({
   placeholder = "Search pizzas by name or ingredients...",
 }: SearchBarProps) {
   return (
-    <div className="relative w-full max-w-xl">
+    <div className="relative w-full max-w-full sm:max-w-xl">
       {/* Search Icon */}
       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-muted-foreground">
         <Search className="h-5 w-5" />

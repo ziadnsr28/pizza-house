@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { SessionProvider } from "@/providers/SessionProvider";
 import "./globals.css";
 
 /**
@@ -83,8 +84,10 @@ export default function RootLayout({
           enableSystem={true}
           disableTransitionOnChange
         >
-          {children}
-          <Toaster position="top-right" richColors theme="system" />
+          <SessionProvider>
+            {children}
+            <Toaster position="top-right" richColors theme="system" />
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

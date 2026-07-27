@@ -7,18 +7,19 @@ const globalForPrisma = globalThis as unknown as {
   prismaPool?: Pool;
 };
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString =
+  process.env.DATABASE_URL ||
+  "postgresql://postgres:postgres@localhost:5432/pizzahouse?schema=public";
 
-const pool =
-  globalForPrisma.prismaPool ??
-  (connectionString ? new Pool({ connectionString }) : undefined);
-const adapter = pool ? new PrismaPg(pool) : undefined;
+const pool = globalForPrisma.prismaPool ?? new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
 
 export const prisma =
   globalForPrisma.prisma ??
-  (adapter ? new PrismaClient({ adapter }) : new PrismaClient());
+  new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
   globalForPrisma.prismaPool = pool;
 }
+

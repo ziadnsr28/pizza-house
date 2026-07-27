@@ -7,27 +7,28 @@ const globalForPrisma = globalThis as unknown as {
   prismaPool?: Pool;
 };
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  "postgresql://postgres:postgres@localhost:5432/pizzahouse?schema=public";
+const connectionString = process.env.DATABASE_URL;
 
-let pool: Pool;
-let adapter: PrismaPg;
-let prismaInstance: PrismaClient;
-
-try {
-  pool = globalForPrisma.prismaPool ?? new Pool({ connectionString });
-  adapter = new PrismaPg(pool);
-  prismaInstance = globalForPrisma.prisma ?? new PrismaClient({ adapter });
-} catch (error) {
-  console.error("[PRISMA INIT ERROR]", error);
-  throw error;
+if (!connectionString) {
+  throw new Error("DATABASE_URL is missing");
 }
 
-export const prisma = prismaInstance;
+const pool: Pool =
+  globalForPrisma.prismaPool ??
+  new Pool({
+    connectionString,
+  });
+
+const adapter = new PrismaPg(pool);
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    adapter,
+    log: ["error"],
+  });
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
   globalForPrisma.prismaPool = pool;
 }
-

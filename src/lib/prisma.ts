@@ -11,12 +11,20 @@ const connectionString =
   process.env.DATABASE_URL ||
   "postgresql://postgres:postgres@localhost:5432/pizzahouse?schema=public";
 
-const pool = globalForPrisma.prismaPool ?? new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
+let pool: Pool;
+let adapter: PrismaPg;
+let prismaInstance: PrismaClient;
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({ adapter });
+try {
+  pool = globalForPrisma.prismaPool ?? new Pool({ connectionString });
+  adapter = new PrismaPg(pool);
+  prismaInstance = globalForPrisma.prisma ?? new PrismaClient({ adapter });
+} catch (error) {
+  console.error("[PRISMA INIT ERROR]", error);
+  throw error;
+}
+
+export const prisma = prismaInstance;
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

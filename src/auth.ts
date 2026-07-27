@@ -17,6 +17,18 @@ const isGoogleConfigured = Boolean(
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  debug: true,
+  logger: {
+    error(code, ...message) {
+      console.error("[AUTH ERROR]", code, ...message);
+    },
+    warn(code, ...message) {
+      console.warn("[AUTH WARN]", code, ...message);
+    },
+    debug(code, ...message) {
+      console.log("[AUTH DEBUG]", code, ...message);
+    },
+  },
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(prisma),
   session: {
@@ -38,27 +50,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            return null;
+          }
+
+          const email = String(credentials.email).trim().toLowerCase();
+          const password = String(credentials.password);
+          const user = await prisma.user.findUnique({ where: { email } });
+
+          if (!user?.password || !(await bcrypt.compare(password, user.password))) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            name: user.name || undefined,
+            email: user.email,
+            image: user.image || undefined,
+            role: user.role,
+            phone: user.phone || undefined,
+            address: user.address || undefined,
+          };
+        } catch (error) {
+          console.error("[AUTH AUTHORIZE CREDENTIALS ERROR]", error);
+          throw error;
         }
-
-        const email = String(credentials.email).trim().toLowerCase();
-        const password = String(credentials.password);
-        const user = await prisma.user.findUnique({ where: { email } });
-
-        if (!user?.password || !(await bcrypt.compare(password, user.password))) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          name: user.name || undefined,
-          email: user.email,
-          image: user.image || undefined,
-          role: user.role,
-          phone: user.phone || undefined,
-          address: user.address || undefined,
-        };
       },
     }),
   ],

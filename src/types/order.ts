@@ -9,7 +9,7 @@
  * src/types/order.ts
  */
 
-export type OrderStatusType = "Pending" | "Preparing" | "Out for Delivery" | "Delivered";
+export type OrderStatusType = "Pending" | "Preparing" | "Out for Delivery" | "Out For Delivery" | "Delivered" | "Cancelled";
 
 export interface CustomerInfo {
   fullName: string;

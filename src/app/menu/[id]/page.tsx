@@ -16,19 +16,56 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { FULL_MENU_PIZZAS } from "@/constants/landing-data";
+import { FULL_MENU_PIZZAS, type PizzaProduct } from "@/constants/landing-data";
+import { prisma } from "@/lib/prisma";
 import PizzaDetailsClient from "./PizzaDetailsClient";
 
 export interface PizzaDetailsPageProps {
   params: Promise<{ id: string }>;
 }
 
+async function getPizzaById(id: string): Promise<PizzaProduct | null> {
+  const normalizedId = id.trim();
+
+  const fallbackPizza = FULL_MENU_PIZZAS.find(
+    (item) => item.id === normalizedId || item.id === normalizedId.replace(/^piz-/, "pizza-")
+  );
+
+  try {
+    const pizzaFromDb = await prisma.pizza.findUnique({ where: { id: normalizedId } });
+
+    if (pizzaFromDb) {
+      return {
+        id: pizzaFromDb.id,
+        name: pizzaFromDb.name,
+        description: pizzaFromDb.description,
+        price: Number(pizzaFromDb.price),
+        image: pizzaFromDb.image,
+        category: (pizzaFromDb.category as PizzaProduct["category"]) || "Classic",
+        ingredients: (() => {
+          try {
+            return JSON.parse(pizzaFromDb.ingredients || "[]");
+          } catch {
+            return [];
+          }
+        })(),
+        badge: fallbackPizza?.badge,
+        isPopular: fallbackPizza?.isPopular,
+      };
+    }
+  } catch {
+    // Fall back to the static menu data if Prisma is unavailable.
+  }
+
+  return fallbackPizza ?? null;
+}
+
 export default async function PizzaDetailsPage(props: PizzaDetailsPageProps) {
   /** Await params promise in accordance with Next.js 15+ App Router rules */
   const { id } = await props.params;
 
-  /** Find matching pizza item from full dataset */
-  const pizza = FULL_MENU_PIZZAS.find((item) => item.id === id);
+  /** Resolve the pizza from the database first, then fall back to the static menu dataset */
+  const pizza = await getPizzaById(id);
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary selection:text-primary-foreground">

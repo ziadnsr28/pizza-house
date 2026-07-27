@@ -13,15 +13,24 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { signOut, useSession } from "next-auth/react";
 import { Mail, Phone, MapPin, LogOut, Edit2, Check, ListOrdered } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/stores/auth-store";
 
 export default function ProfileCard() {
-  const { user, logout, updateProfile } = useAuthStore();
+  const { data: session, update } = useSession();
+  const user = session?.user
+    ? {
+        fullName: session.user.name || "Customer",
+        email: session.user.email || "",
+        phone: session.user.phone || "",
+        address: session.user.address || "",
+      }
+    : null;
 
   const [isEditing, setIsEditing] = useState(false);
+  const [fullName, setFullName] = useState(user?.fullName || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [address, setAddress] = useState(user?.address || "");
 
@@ -36,8 +45,19 @@ export default function ProfileCard() {
       .slice(0, 2);
   };
 
-  const handleSave = () => {
-    updateProfile({ phone, address });
+  const handleSave = async () => {
+    const response = await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fullName, phone, address }),
+    });
+
+    if (!response.ok) {
+      toast.error("Unable to update profile. Please try again.");
+      return;
+    }
+
+    await update();
     setIsEditing(false);
     toast.success("Profile updated successfully!");
   };
@@ -52,13 +72,23 @@ export default function ProfileCard() {
 
         <div className="flex-1">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-            <h2 className="text-2xl font-extrabold text-foreground">{user.fullName}</h2>
+            {isEditing ? (
+              <input
+                type="text"
+                autoComplete="name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="rounded-lg border border-border bg-background px-2.5 py-1 text-lg font-extrabold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            ) : (
+              <h2 className="text-2xl font-extrabold text-foreground">{user.fullName}</h2>
+            )}
             <span className="rounded-full bg-emerald-500/15 px-3 py-0.5 text-xs font-bold text-emerald-500">
               Active Member
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Member since {new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+            Pizza House member
           </p>
         </div>
 
@@ -149,7 +179,7 @@ export default function ProfileCard() {
           variant="destructive"
           size="sm"
           onClick={() => {
-            logout();
+            signOut({ callbackUrl: "/" });
             toast.info("Logged out successfully.");
           }}
           className="w-full sm:w-auto gap-2 font-semibold rounded-xl"

@@ -14,6 +14,7 @@
 
 import { useState, useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -30,8 +31,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import OrderItemComponent from "@/components/OrderItem";
 import { Button } from "@/components/ui/button";
-import { useOrderStore } from "@/stores/order-store";
-import { useAuthStore } from "@/stores/auth-store";
 import { Order } from "@/types/order";
 import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -52,9 +51,12 @@ function getStatusStyle(status: Order["status"]) {
     case "Preparing":
       return "bg-blue-500/15 text-blue-500";
     case "Out for Delivery":
+    case "Out For Delivery":
       return "bg-primary/15 text-primary";
     case "Delivered":
       return "bg-emerald-500/15 text-emerald-500";
+    case "Cancelled":
+      return "bg-destructive/15 text-destructive";
     default:
       return "bg-muted text-muted-foreground";
   }
@@ -71,12 +73,12 @@ function PaymentIcon({ method }: { method: string }) {
 export default function OrdersPage() {
   const router = useRouter();
   const isClient = useIsClient();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const storeOrders = useOrderStore((state) => state.orders);
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
   const [apiOrders, setApiOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    if (isClient && !isAuthenticated) {
+    if (isClient && status !== "loading" && !isAuthenticated) {
       router.push("/login?returnUrl=/orders");
       return;
     }
@@ -89,11 +91,9 @@ export default function OrdersPage() {
         }
       })
       .catch(() => {});
-  }, [isClient, isAuthenticated, router]);
+  }, [isClient, isAuthenticated, router, status]);
 
-  const displayOrders = isClient && isAuthenticated
-    ? apiOrders.length > 0 ? apiOrders : storeOrders
-    : [];
+  const displayOrders = isClient && isAuthenticated ? apiOrders : [];
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary selection:text-primary-foreground">

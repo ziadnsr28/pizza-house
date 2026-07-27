@@ -212,7 +212,7 @@ export default function PizzaDetailsClient({ pizza }: PizzaDetailsClientProps) {
 
       {/* Customer Reviews Section */}
       <div className="mt-16">
-        <ReviewsSection />
+        <ReviewsSection pizzaId={pizza.id} />
       </div>
 
       {/* Related Pizzas Section */}

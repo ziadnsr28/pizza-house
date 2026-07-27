@@ -14,6 +14,7 @@
 
 import { useState, useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { ArrowLeft, ShoppingBag, ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -24,9 +25,9 @@ import OrderSummary from "@/components/OrderSummary";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/stores/cart-store";
 import { useOrderStore } from "@/stores/order-store";
-import { useAuthStore } from "@/stores/auth-store";
 import { Order } from "@/types/order";
 import { formatPrice } from "@/lib/utils";
+import { toast } from "sonner";
 
 function useIsClient() {
   return useSyncExternalStore(
@@ -39,8 +40,9 @@ function useIsClient() {
 export default function CheckoutPage() {
   const router = useRouter();
   const isClient = useIsClient();
+  const { status } = useSession();
 
-  const { items, clearCart, getSubtotal, getDeliveryFee, getTotalPrice } = useCartStore();
+  const { items, clearCart, getTotalPrice } = useCartStore();
   const addOrder = useOrderStore((state) => state.addOrder);
 
   const [selectedPayment, setSelectedPayment] = useState<PaymentType>("cod");
@@ -53,7 +55,7 @@ export default function CheckoutPage() {
   };
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = status === "authenticated";
 
   /** Redirect to /login if not authenticated, or to /menu if cart is empty after client mount */
   useEffect(() => {
@@ -70,48 +72,37 @@ export default function CheckoutPage() {
   const handleOrderSubmit = async (data: CheckoutFormData) => {
     setIsSubmitting(true);
 
-    const newOrder: Order = {
-      id: `PH-${Math.floor(100000 + Math.random() * 900000)}`,
-      customer: {
-        fullName: data.fullName,
-        email: data.email,
-        phone: data.phone,
-        city: data.city,
-        address: data.address,
-        notes: data.notes,
-      },
-      items: [...items],
-      paymentMethod: paymentLabels[selectedPayment],
-      subtotal: getSubtotal(),
-      deliveryFee: getDeliveryFee(),
-      totalAmount: getTotalPrice(),
-      status: "Pending",
-      createdAt: new Date().toISOString(),
-    };
-
     try {
-      // Send API request to backend
-      await fetch("/api/orders", {
+      const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: newOrder.items,
-          totalAmount: newOrder.totalAmount,
+          items,
+          totalAmount: getTotalPrice(),
+          customerName: data.fullName,
+          customerEmail: data.email,
+          customerPhone: data.phone,
+          customerAddress: data.address,
+          customerCity: data.city,
+          notes: data.notes,
+          paymentMethod: paymentLabels[selectedPayment],
         }),
       });
-    } catch {
-      // Gracefully continue with client state if API fails
-    }
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Unable to create order");
+      }
 
-    // Save to Zustand order store and sessionStorage fallback
-    addOrder(newOrder);
-    sessionStorage.setItem("last_order_receipt", JSON.stringify(newOrder));
-
-    // Clear cart & navigate to success page
-    setTimeout(() => {
+      const newOrder = result.order as Order;
+      addOrder(newOrder);
+      sessionStorage.setItem("last_order_receipt", JSON.stringify(newOrder));
       clearCart();
       router.push("/order-success");
-    }, 400);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to create order");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isClient || items.length === 0) {

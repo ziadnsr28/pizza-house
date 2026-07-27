@@ -10,10 +10,14 @@
  * src/components/PizzaCard.tsx
  */
 
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import PriceModal from "@/components/ui/PriceModal";
+import { useState } from "react";
 import FavoriteButton from "@/components/FavoriteButton";
 import { PizzaProduct } from "@/constants/landing-data";
 import { formatPrice } from "@/lib/utils";
@@ -25,10 +29,11 @@ export interface PizzaCardProps {
 
 export default function PizzaCard({ pizza }: PizzaCardProps) {
   const { id, name, description, price, image, badge } = pizza;
+  const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
 
   return (
     <Link
-      href={`/menu/${id}`}
+      href={`/menu/${encodeURIComponent(id)}`}
       className="block group w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
     >
       <article className="relative flex flex-col w-full h-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10">
@@ -72,12 +77,15 @@ export default function PizzaCard({ pizza }: PizzaCardProps) {
 
           {/* Card Footer: Price & Order Action */}
           <div className="mt-6 flex items-center justify-between gap-4 pt-4 border-t border-border/40 w-full">
-            <div className="flex flex-col">
+          <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+            <div className="flex flex-col cursor-pointer" onClick={(e)=>{e.preventDefault(); e.stopPropagation(); setIsPriceModalOpen(true);}}>
               <span className="text-xs font-medium text-muted-foreground">Price</span>
-              <span className="text-lg sm:text-xl font-bold text-accent">
-                {formatPrice(price)}
+              <span className="text-lg sm:text-xl font-bold text-accent truncate" title={formatPrice(price)}>
+                {formatPrice(Math.floor(price/10)*10)}+
               </span>
             </div>
+          </div>
+
 
             {/* Order Now CTA button */}
             <Button
@@ -91,6 +99,7 @@ export default function PizzaCard({ pizza }: PizzaCardProps) {
           </div>
         </div>
       </article>
+      <PriceModal open={isPriceModalOpen} onClose={() => setIsPriceModalOpen(false)} price={price} />
     </Link>
   );
 }

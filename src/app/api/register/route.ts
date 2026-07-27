@@ -19,7 +19,7 @@ import { prisma } from "@/lib/prisma";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").transform((email) => email.trim().toLowerCase()),
   phone: z.string().min(1, "Phone number is required"),
   address: z.string().min(5, "Address must be at least 5 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -30,15 +30,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = registerSchema.parse(body);
 
-    // Check if user already exists
-    let existingUser = null;
-    try {
-      existingUser = await prisma.user.findUnique({
-        where: { email: validatedData.email },
-      });
-    } catch {
-      // Prisma offline fallback
-    }
+    const existingUser = await prisma.user.findUnique({
+      where: { email: validatedData.email },
+    });
 
     if (existingUser) {
       return NextResponse.json(
@@ -49,30 +43,16 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-    let newUser = null;
-    try {
-      newUser = await prisma.user.create({
-        data: {
-          name: validatedData.fullName,
-          email: validatedData.email,
-          phone: validatedData.phone,
-          address: validatedData.address,
-          password: hashedPassword,
-          role: "USER",
-        },
-      });
-    } catch {
-      // Offline fallback user object
-      newUser = {
-        id: `usr-${Date.now()}`,
+    const newUser = await prisma.user.create({
+      data: {
         name: validatedData.fullName,
         email: validatedData.email,
         phone: validatedData.phone,
         address: validatedData.address,
+        password: hashedPassword,
         role: "USER",
-        createdAt: new Date(),
-      };
-    }
+      },
+    });
 
     return NextResponse.json({
       success: true,
@@ -92,8 +72,9 @@ export async function POST(request: Request) {
       );
     }
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { success: false, error: "Registration failed. Please try again." },
+      { success: false, error: `Registration error: ${errorMessage}` },
       { status: 500 }
     );
   }

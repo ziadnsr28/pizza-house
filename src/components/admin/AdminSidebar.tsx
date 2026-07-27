@@ -1,9 +1,10 @@
 /**
- * AdminSidebar Component
+ * Updated AdminSidebar Component
  *
  * What it does:
- * Renders the responsive administration sidebar navigation menu with active route styling,
- * mobile drawer toggle, and links to Dashboard, Products, Orders, Users, Reviews, and Main Site.
+ * Sidebar containing all 7 required navigation items:
+ * Dashboard, Orders, Pizzas, Categories, Customers, Reviews, Settings.
+ * Supports collapse on mobile, active route highlight, Framer Motion transitions, Lucide icons.
  *
  * Where it belongs:
  * src/components/admin/AdminSidebar.tsx
@@ -11,101 +12,107 @@
 
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
-  Pizza,
   ShoppingBag,
+  Pizza,
+  FolderTree,
   Users,
+  Ticket,
   MessageSquare,
+  Settings,
   ArrowLeft,
-  Menu,
   X,
-  ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 
-const ADMIN_NAV_ITEMS = [
+export const ADMIN_SIDEBAR_ITEMS = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Products", href: "/admin/products", icon: Pizza },
   { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
-  { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Pizzas", href: "/admin/pizzas", icon: Pizza },
+  { label: "Categories", href: "/admin/categories", icon: FolderTree },
+  { label: "Customers", href: "/admin/customers", icon: Users },
+  { label: "Coupons", href: "/admin/coupons", icon: Ticket },
   { label: "Reviews", href: "/admin/reviews", icon: MessageSquare },
+  { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
-export default function AdminSidebar() {
-  const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
+interface AdminSidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-  const toggleSidebar = () => setIsOpen((prev) => !prev);
-  const closeSidebar = () => setIsOpen(false);
+export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
+  const pathname = usePathname();
 
   return (
     <>
-      {/* Mobile Top Header Toggle Bar */}
-      <div className="flex h-16 w-full items-center justify-between border-b border-border/60 bg-card/90 px-4 backdrop-blur-md lg:hidden sticky top-0 z-40">
-        <Link href="/admin" className="flex items-center gap-2 font-bold text-foreground">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <ShieldAlert className="h-4 w-4" />
-          </div>
-          <span>Pizza House Admin</span>
-        </Link>
+      {/* Mobile Drawer Overlay Backdrop */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            aria-hidden="true"
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
+          />
+        )}
+      </AnimatePresence>
 
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            aria-label="Toggle admin menu"
-            className="rounded-lg p-2 text-foreground hover:bg-muted focus:outline-none"
-          >
-            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Backdrop overlay for mobile drawer */}
-      {isOpen && (
-        <div
-          onClick={closeSidebar}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
-        />
-      )}
-
-      {/* Sidebar Container (Fixed desktop, Drawer mobile) */}
+      {/* Sidebar Container */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 flex w-64 flex-col justify-between border-r border-border/60 bg-card/95 p-6 backdrop-blur-xl transition-transform duration-300 ease-in-out lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          "fixed top-0 bottom-0 left-0 z-50 flex w-64 flex-col justify-between border-r border-border/60 bg-card/95 p-5 backdrop-blur-xl transition-transform duration-300 ease-in-out lg:translate-x-0",
+          isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        <div className="flex flex-col gap-8">
-          {/* Header Brand */}
+        <div className="flex flex-col gap-6">
+          {/* Brand Header */}
           <div className="flex items-center justify-between">
             <Link
               href="/admin"
-              onClick={closeSidebar}
-              className="flex items-center gap-2.5 text-lg font-extrabold tracking-tight text-foreground"
+              onClick={onClose}
+              className="flex items-center gap-3 text-lg font-extrabold tracking-tight text-foreground group"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25 group-hover:scale-105 transition-transform">
                 <Pizza className="h-5 w-5 text-white" />
               </div>
-              <span>
-                Admin <span className="text-primary">Panel</span>
-              </span>
+              <div className="flex flex-col">
+                <span className="text-base font-extrabold leading-none">
+                  Pizza <span className="text-primary">House</span>
+                </span>
+                <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1 mt-0.5">
+                  <ShieldCheck className="h-3 w-3 text-emerald-500" /> Admin Panel
+                </span>
+              </div>
             </Link>
 
-            <div className="hidden lg:block">
-              <ThemeToggle />
-            </div>
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close sidebar"
+              className="rounded-xl p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
+
+          <div className="h-px w-full bg-border/40" />
 
           {/* Navigation Links */}
           <nav className="flex flex-col gap-1.5">
-            {ADMIN_NAV_ITEMS.map((item) => {
+            <span className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
+              Main Menu
+            </span>
+            {ADMIN_SIDEBAR_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive =
                 item.href === "/admin"
@@ -116,31 +123,49 @@ export default function AdminSidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={closeSidebar}
+                  onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-200",
+                    "relative flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-200 group",
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 font-bold"
-                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 font-bold"
+                      : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon
+                    className={cn(
+                      "h-4 w-4 transition-transform group-hover:scale-110",
+                      isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                    )}
+                  />
                   <span>{item.label}</span>
+
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeIndicator"
+                      className="absolute right-3 h-2 w-2 rounded-full bg-white"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* Footer Shortcut to Main Site */}
-        <div className="pt-6 border-t border-border/40">
+        {/* Footer Actions */}
+        <div className="flex flex-col gap-3 pt-4 border-t border-border/40">
+          <div className="flex items-center justify-between px-2">
+            <span className="text-xs text-muted-foreground font-medium">Theme Mode</span>
+            <ThemeToggle />
+          </div>
+
           <Link
             href="/"
-            onClick={closeSidebar}
-            className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
+            onClick={onClose}
+            className="flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-muted/30 px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Return to Main Website</span>
+            <span>Return to Customer Site</span>
           </Link>
         </div>
       </aside>

@@ -19,7 +19,6 @@ import { User as UserIcon } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProfileCard from "@/components/ProfileCard";
-import { useAuthStore } from "@/stores/auth-store";
 
 function useIsClient() {
   return useSyncExternalStore(
@@ -33,9 +32,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const isClient = useIsClient();
   const { status } = useSession();
-  const { isAuthenticated } = useAuthStore();
-
-  const isAuth = isClient && (status === "authenticated" || isAuthenticated);
+  const isAuth = isClient && status === "authenticated";
 
   useEffect(() => {
     if (isClient && status !== "loading" && !isAuth) {

@@ -13,17 +13,16 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { Mail, Lock, LogIn, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AuthInput } from "./AuthInput";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/stores/auth-store";
 
 /** Google G Logo Component */
 function GoogleIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -63,9 +62,17 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("returnUrl") || "/profile";
 
-  const login = useAuthStore((state) => state.login);
+  const { update } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGoogleAvailable, setIsGoogleAvailable] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/providers")
+      .then((response) => response.json())
+      .then((providers) => setIsGoogleAvailable(Boolean(providers.google)))
+      .catch(() => setIsGoogleAvailable(false));
+  }, []);
 
   const {
     register,
@@ -74,8 +81,8 @@ export default function LoginForm() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "alex@pizzahouse.eg",
-      password: "password123",
+      email: "",
+      password: "",
       rememberMe: true,
     },
   });
@@ -91,26 +98,33 @@ export default function LoginForm() {
         redirect: false,
       });
 
-      if (res?.error) {
+      if (!res || res.error) {
         toast.error("Invalid credentials", {
           description: "Please check your email and password.",
         });
-        setIsSubmitting(false);
         return;
       }
 
-      login(data.email, "Alex Morgan");
+      const updatedSession = await update();
       toast.success("Welcome back!", {
         description: "Successfully signed in to Pizza House.",
       });
 
       router.refresh();
-      router.push(returnUrl);
+
+      // Role-based redirect: ADMIN users go to /admin, others to returnUrl
+      const userRole = updatedSession?.user?.role;
+      const hasExplicitReturn = searchParams.has("returnUrl");
+
+      if (userRole === "ADMIN" && !hasExplicitReturn) {
+        router.replace("/admin");
+      } else {
+        router.replace(returnUrl);
+      }
     } catch {
-      login(data.email, "Alex Morgan");
-      toast.success("Logged in successfully!");
-      router.refresh();
-      router.push(returnUrl);
+      toast.error("Unable to sign in", {
+        description: "Please try again in a moment.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -131,28 +145,31 @@ export default function LoginForm() {
   return (
     <div className="flex flex-col gap-5 w-full">
       {/* Google OAuth Button — Always Visible */}
-      <Button
-        type="button"
-        variant="outline"
-        onClick={handleGoogleLogin}
-        disabled={isGoogleLoading || isSubmitting}
-        className="w-full gap-3 font-semibold h-11 rounded-2xl border-border/80 bg-card/80 hover:bg-muted/60 text-foreground transition-all"
-      >
-        {isGoogleLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-        ) : (
-          <GoogleIcon className="h-4 w-4" />
-        )}
-        <span>Continue with Google</span>
-      </Button>
+      {isGoogleAvailable && (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoogleLogin}
+            disabled={isGoogleLoading || isSubmitting}
+            className="w-full gap-3 font-semibold h-11 rounded-2xl border-border/80 bg-card/80 hover:bg-muted/60 text-foreground transition-all"
+          >
+            {isGoogleLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <GoogleIcon className="h-4 w-4" />
+            )}
+            <span>Continue with Google</span>
+          </Button>
 
-      {/* Divider */}
-      <div className="relative flex items-center justify-center my-1">
-        <div className="border-t border-border/60 w-full" />
-        <span className="bg-card px-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider absolute">
-          or email
-        </span>
-      </div>
+          <div className="relative flex items-center justify-center my-1">
+            <div className="border-t border-border/60 w-full" />
+            <span className="bg-card px-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider absolute">
+              or email
+            </span>
+          </div>
+        </>
+      )}
 
       {/* Email / Password Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full" noValidate>

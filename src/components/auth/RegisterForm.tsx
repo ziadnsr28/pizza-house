@@ -19,17 +19,16 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { User as UserIcon, Mail, Lock, Phone, MapPin, UserPlus, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AuthInput } from "./AuthInput";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/stores/auth-store";
 
 /** Google G Logo Component */
 function GoogleIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -80,9 +79,17 @@ export default function RegisterForm() {
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("returnUrl") || "/profile";
 
-  const registerUser = useAuthStore((state) => state.register);
+  const { update } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGoogleAvailable, setIsGoogleAvailable] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/providers")
+      .then((response) => response.json())
+      .then((providers) => setIsGoogleAvailable(Boolean(providers.google)))
+      .catch(() => setIsGoogleAvailable(false));
+  }, []);
 
   const {
     register,
@@ -122,16 +129,24 @@ export default function RegisterForm() {
         toast.error("Registration failed", {
           description: result.error || "Failed to create account",
         });
-        setIsSubmitting(false);
         return;
       }
 
-      registerUser({
-        fullName: data.fullName,
+      const signInResult = await signIn("credentials", {
         email: data.email,
-        phone: data.phone,
-        address: data.address,
+        password: data.password,
+        redirect: false,
       });
+
+      if (!signInResult || signInResult.error) {
+        toast.success("Account created successfully!", {
+          description: "Please sign in with your new credentials.",
+        });
+        router.push("/login");
+        return;
+      }
+
+      await update();
 
       toast.success("Account created successfully!", {
         description: "Welcome to Pizza House.",
@@ -140,16 +155,9 @@ export default function RegisterForm() {
       router.refresh();
       router.push(returnUrl);
     } catch {
-      registerUser({
-        fullName: data.fullName,
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
+      toast.error("Registration failed", {
+        description: "Please try again in a moment.",
       });
-
-      toast.success("Account created successfully!");
-      router.refresh();
-      router.push(returnUrl);
     } finally {
       setIsSubmitting(false);
     }
@@ -170,28 +178,31 @@ export default function RegisterForm() {
   return (
     <div className="flex flex-col gap-4 w-full">
       {/* Google OAuth Register Button — Always Visible */}
-      <Button
-        type="button"
-        variant="outline"
-        onClick={handleGoogleLogin}
-        disabled={isGoogleLoading || isSubmitting}
-        className="w-full gap-3 font-semibold h-11 rounded-2xl border-border/80 bg-card/80 hover:bg-muted/60 text-foreground transition-all"
-      >
-        {isGoogleLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-        ) : (
-          <GoogleIcon className="h-4 w-4" />
-        )}
-        <span>Sign up with Google</span>
-      </Button>
+      {isGoogleAvailable && (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoogleLogin}
+            disabled={isGoogleLoading || isSubmitting}
+            className="w-full gap-3 font-semibold h-11 rounded-2xl border-border/80 bg-card/80 hover:bg-muted/60 text-foreground transition-all"
+          >
+            {isGoogleLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <GoogleIcon className="h-4 w-4" />
+            )}
+            <span>Sign up with Google</span>
+          </Button>
 
-      {/* Divider */}
-      <div className="relative flex items-center justify-center my-1">
-        <div className="border-t border-border/60 w-full" />
-        <span className="bg-card px-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider absolute">
-          or complete registration
-        </span>
-      </div>
+          <div className="relative flex items-center justify-center my-1">
+            <div className="border-t border-border/60 w-full" />
+            <span className="bg-card px-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider absolute">
+              or complete registration
+            </span>
+          </div>
+        </>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5 w-full" noValidate>
         <AuthInput

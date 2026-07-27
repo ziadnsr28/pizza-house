@@ -1,5 +1,5 @@
 // Prisma Schema for Pizza House
-// Database Models: User, Account, Session, VerificationToken, Pizza, Order, OrderItem, Review
+// Database Models: User, Account, Session, VerificationToken, Pizza, Category, Order, OrderItem, Review, Coupon
 
 generator client {
   provider = "prisma-client-js"
@@ -72,27 +72,50 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
-model Pizza {
+model Category {
   id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  image       String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pizzas Pizza[]
+}
+
+model Pizza {
+  id          String    @id @default(cuid())
   name        String
   description String
   image       String
   category    String
+  categoryId  String?
+  categoryRef Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   price       Float
-  ingredients String   @default("[]") // JSON string of ingredients
-  createdAt   DateTime @default(now())
+  ingredients String    @default("[]") // JSON string of ingredients
+  available   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
 
   orderItems OrderItem[]
   reviews    Review[]
 }
 
 model Order {
-  id        String   @id @default(cuid())
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  status    String   @default("Pending") // Pending, Preparing, Out for Delivery, Delivered
-  total     Float
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customerName  String   @default("Guest Customer")
+  customerEmail String   @default("guest@pizzahouse.com")
+  customerPhone String   @default("01000000000")
+  customerAddress String?
+  customerCity    String?
+  notes           String?
+  status        String   @default("Pending") // Pending, Preparing, Out For Delivery, Delivered, Cancelled
+  paymentMethod String   @default("Cash on Delivery") // Cash on Delivery, Credit Card, Vodafone Cash
+  paymentStatus String   @default("Paid") // Paid, Unpaid, Refunded
+  total         Float
+  createdAt     DateTime @default(now())
 
   items OrderItem[]
 }
@@ -117,5 +140,15 @@ model Review {
   pizza     Pizza    @relation(fields: [pizzaId], references: [id], onDelete: Cascade)
   rating    Int
   comment   String
+  status    String   @default("Pending") // Pending, Approved, Rejected
   createdAt DateTime @default(now())
+}
+
+model Coupon {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  discount  Float // e.g. 15 for 15% off or fixed amount
+  expiresAt DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
 }

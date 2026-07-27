@@ -24,8 +24,21 @@ import { Button } from "@/components/ui/button";
 export default function HeroSection() {
   return (
     <section id="hero" className="relative overflow-hidden pt-8 pb-20 md:pt-16 md:pb-28 lg:pt-20 lg:pb-36">
-      {/* Subtle Background Glow Accent */}
-      <div className="pointer-events-none absolute top-1/4 left-1/2 -z-10 h-[350px] w-[350px] -translate-x-1/2 rounded-full bg-primary/15 blur-[120px] sm:h-[500px] sm:w-[500px]" />
+      {/* Video Background */}
+<div className="absolute inset-0 -z-20">
+  <video
+    className="w-full h-full object-cover"
+    autoPlay
+    loop
+    muted
+    playsInline
+    poster="/images/hero-pizza.png"
+    src="/videos/pizza-making.mp4"
+  />
+  <div className="absolute inset-0 bg-black/40" />
+</div>
+{/* Subtle Background Glow Accent */}
+<div className="pointer-events-none absolute top-1/4 left-1/2 -z-10 h-[350px] w-[350px] -translate-x-1/2 rounded-full bg-primary/15 blur-[120px] sm:h-[500px] sm:w-[500px]" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8">
